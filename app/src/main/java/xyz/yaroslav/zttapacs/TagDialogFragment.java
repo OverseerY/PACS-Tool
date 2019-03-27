@@ -1,15 +1,15 @@
-package xyz.yaroslav.testpacsapp;
+package xyz.yaroslav.zttapacs;
 
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,30 +20,45 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class TagDialogFragment extends DialogFragment {
+
+    //#region Variables
+
+    TextView uidField;
+    EditText tagDepartment;
+    EditText tagEmployee;
+    Button tagSave;
+    Button tagCancel;
 
     public static final String SYS_PREFERENCES = "SystemPreferences";
     public static final String SERVER_PROTOCOL = "srv_protocol";
     public static final String SERVER_IP = "srv_ip";
     public static final String SERVER_PORT = "srv_port";
     public static final String SERVER_POSTFIX = "srv_postfix";
+
+    private static final String EDIT_POSTFIX = "edit";
+    private static final String GET_BY_ID_POSTFIX = "getbyid?card=";
 
     private String server_protocol;
     private String server_ip;
@@ -56,8 +71,13 @@ public class TagDialogFragment extends DialogFragment {
     private String employeeVal = "";
     private String departmentVal = "";
     private String decUidVal = "";
+    private String default_address = "";
 
     private String uid_value;
+
+    //#endregion
+
+    //#region Fragment Methods
 
     public void setUid(String uid_value) {
         this.uid_value = uid_value;
@@ -73,9 +93,10 @@ public class TagDialogFragment extends DialogFragment {
         server_protocol = systemPref.getString(SERVER_PROTOCOL, "http");
         server_ip = systemPref.getString(SERVER_IP, "192.168.0.14");
         server_port = systemPref.getString(SERVER_PORT, "5003");
-        server_postfix = systemPref.getString(SERVER_POSTFIX, "add");
+        server_postfix = systemPref.getString(SERVER_POSTFIX, "edit");
 
         default_url = server_protocol + "://" + server_ip + ":" + server_port + "/" + server_postfix;
+        default_address = server_protocol + "://" + server_ip + ":" + server_port;
 
         return dialog;
     }
@@ -85,15 +106,16 @@ public class TagDialogFragment extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.tag_layout, container, false);
 
-        final TextView uidField = view.findViewById(R.id.tagUidValue);
-        final EditText tagDepartment = view.findViewById(R.id.tagDepartment);
-        final EditText tagEmployee = view.findViewById(R.id.tagEmployee);
-        Button tagSave = view.findViewById(R.id.tagSave);
-        Button tagCancel = view.findViewById(R.id.tagCancel);
+        uidField = view.findViewById(R.id.tagUidValue);
+        tagDepartment = view.findViewById(R.id.tagDepartment);
+        tagEmployee = view.findViewById(R.id.tagEmployee);
+        tagSave = view.findViewById(R.id.tagSave);
+        tagCancel = view.findViewById(R.id.tagCancel);
 
         if (uid_value != null && !uid_value.equals("")) {
             String decUid = convertToDecimal(uid_value);
             uidField.setText(decUid);
+            checkCardExistence(decUid);
         }
 
         tagCancel.setOnClickListener(new View.OnClickListener() {
@@ -116,7 +138,15 @@ public class TagDialogFragment extends DialogFragment {
                     employeeVal = tagEmployee.getText().toString();
                 }
                 if (!decUidVal.equals("") && !departmentVal.equals("") && !employeeVal.equals("")) {
-                    new HTTPAsyncTask().execute(default_url);
+                    //new HTTPAsyncTask().execute(default_url);
+                    try {
+                        String result = new HTTPAsyncTask().execute(default_url).get();
+                        Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     getDialog().dismiss();
                 } else {
                     Toast.makeText(getContext(), getString(R.string.toast_empty_fields), Toast.LENGTH_SHORT).show();
@@ -126,6 +156,8 @@ public class TagDialogFragment extends DialogFragment {
 
         return view;
     }
+
+    //#endregion
 
     private String convertToDecimal(String uid) {
         int num_of_pairs = uid.toCharArray().length/2;
@@ -145,9 +177,15 @@ public class TagDialogFragment extends DialogFragment {
             dec_uid += s;
         }
 
-        long decimal = Long.parseLong(dec_uid, 16);
 
-        return Long.toString(decimal);
+        try {
+            long decimal = Long.parseLong(dec_uid, 16);
+            return Long.toString(decimal);
+        } catch (NumberFormatException e) {
+            Log.e("TAG", e.getMessage());
+            BigInteger bint = new BigInteger(dec_uid, 16);
+            return bint.toString();
+        }
     }
 
     private class HTTPAsyncTask extends AsyncTask<String, Void, String> {
@@ -183,6 +221,7 @@ public class TagDialogFragment extends DialogFragment {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+
         // 2. build JSON object
         JSONObject jsonObject = buidJsonObject();
 
@@ -192,8 +231,10 @@ public class TagDialogFragment extends DialogFragment {
         // 4. make POST request to the given URL
         conn.connect();
 
+        result = conn.getResponseMessage();
+
         // 5. return response message
-        return conn.getResponseMessage()+"";
+        return result;
 
     }
 
@@ -214,6 +255,63 @@ public class TagDialogFragment extends DialogFragment {
         writer.flush();
         writer.close();
         os.close();
+    }
+
+    private void checkCardExistence(String cardId) {
+        default_address = default_address + "/" + GET_BY_ID_POSTFIX + cardId;
+        try {
+            EmployeeTag employeeTag = new CheckCardAsynkTask().execute(default_address).get();
+            if (employeeTag != null) {
+                tagEmployee.setText(employeeTag.getEmpName());
+                tagDepartment.setText(employeeTag.getEmpDepartment());
+            }
+        } catch (ExecutionException | InterruptedException e) {
+            Log.e("CHECK_CARD_EXISTENCE", "Exception: " + "(" + e.getClass() + "): " + e.getMessage());
+        }
+    }
+
+    private class CheckCardAsynkTask extends AsyncTask<String, Void, EmployeeTag> {
+        @Override
+        protected EmployeeTag doInBackground(String... urls) {
+            return parseJsonFromServer(urls[0]);
+        }
+    }
+
+    private EmployeeTag parseJsonFromServer(String srv_url) {
+        try {
+            URL url = new URL(srv_url);
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+            InputStream stream = new BufferedInputStream(urlConnection.getInputStream());
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream));
+            StringBuilder builder = new StringBuilder();
+
+            String inputString;
+
+            while ((inputString = bufferedReader.readLine()) != null) {
+                builder.append(inputString);
+            }
+
+            urlConnection.disconnect();
+
+            JSONObject object = new JSONObject(builder.toString());
+            JSONArray jsonArray = object.getJSONArray("staff");
+            JSONObject nestedObject = jsonArray.getJSONObject(0);
+            try {
+                String cardId = String.valueOf(nestedObject.getString("card"));
+                String employee = String.valueOf(nestedObject.getString("employee"));
+                String department = String.valueOf(nestedObject.getString("department"));
+
+                return new EmployeeTag(cardId, employee, department);
+            } catch (JSONException e) {
+                Log.e("GET_CARD_BY_ID", "JSON Exception: " + "(" + e.getClass() + "): " + e.getMessage());
+            }
+        } catch (IOException e) {
+            Log.e("GET_CARD_BY_ID", "IO Exception: " + "(" + e.getClass() + "): " + e.getMessage());
+        } catch (JSONException e) {
+            Log.e("GET_CARD_BY_ID", "JSON Exception: " + "(" + e.getClass() + "): " + e.getMessage());
+        }
+        return null;
     }
 }
 

@@ -1,4 +1,4 @@
-package xyz.yaroslav.testpacsapp;
+package xyz.yaroslav.zttapacs;
 
 import org.junit.Test;
 

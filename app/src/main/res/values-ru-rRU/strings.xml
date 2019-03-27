@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ЗТТА СКУД</string>
+    <string name="hint_name">Иванов И.И.</string>
+    <string name="hint_department">ОАСУ</string>
+    <string name="label_cancel">Отмена</string>
+    <string name="label_save">Сохранить</string>
+    <string name="label_clear">Очистить</string>
+    <string name="label_settings">Настройки</string>
+    <string name="label_menu">Меню</string>
+    <string name="label_default">Коснитесь NFC метки чтобы её считать</string>
+    <string name="label_nfc_off">NFC модуль отсутствует либо отключен</string>
+    <string name="label_address">Адрес:</string>
+    <string name="label_port">Порт:</string>
+    <string name="label_postfix">Постфикс:</string>
+    <string name="label_employee">Сотрудник:</string>
+    <string name="label_department">Отдел:</string>
+    <string name="toast_settings_saved">Настройки сохранены</string>
+    <string name="toast_empty_fields">Пустые поля недопустимы</string>
+    <string name="toast_address_error">Адрес сервера некорректен или недоступен</string>
+</resources>

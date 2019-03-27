@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">ZTTA PACS Tool</string>
+    <string name="app_name">ZTTA PACS</string>
 
-    <string name="hint_protocol">http</string>
-    <string name="hint_ip">192.168.0.200</string>
-    <string name="hint_port">2244</string>
-    <string name="hint_postfix">users/foo</string>
+    <string name="hint_protocol" translatable="false">http</string>
+    <string name="hint_ip" translatable="false">192.168.0.200</string>
+    <string name="hint_port" translatable="false">2244</string>
+    <string name="hint_postfix" translatable="false">users/foo</string>
     <string name="hint_name">Ivanov I.I.</string>
     <string name="hint_department">OASU</string>
 
@@ -14,12 +14,13 @@
     <string name="label_settings">Settings</string>
     <string name="label_menu">Menu</string>
     <string name="label_default">Touch NFC tag to read UID</string>
+    <string name="label_nfc_off">NFC module is disabled or missing</string>
     <string name="label_address">Address:</string>
     <string name="label_port">Port:</string>
     <string name="label_postfix">Postfix:</string>
     <string name="label_employee">Employee:</string>
     <string name="label_department">Department:</string>
-    <string name="label_uid">UID:</string>
+    <string name="label_uid" translatable="false">UID:</string>
 
     <string name="toast_settings_saved">Settings saved</string>
     <string name="toast_empty_fields">Fields are empty</string>
