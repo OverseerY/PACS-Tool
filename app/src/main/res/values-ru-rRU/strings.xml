@@ -6,6 +6,7 @@
     <string name="label_cancel">Отмена</string>
     <string name="label_save">Сохранить</string>
     <string name="label_clear">Очистить</string>
+    <string name="label_ok">Да</string>
     <string name="label_settings">Настройки</string>
     <string name="label_menu">Меню</string>
     <string name="label_default">Коснитесь NFC метки чтобы её считать</string>
@@ -15,7 +16,10 @@
     <string name="label_postfix">Постфикс:</string>
     <string name="label_employee">Сотрудник:</string>
     <string name="label_department">Отдел:</string>
+    <string name="label_warning">Внимание!</string>
+
     <string name="toast_settings_saved">Настройки сохранены</string>
     <string name="toast_empty_fields">Пустые поля недопустимы</string>
     <string name="toast_address_error">Адрес сервера некорректен или недоступен</string>
+    <string name="message_confirmation_clear">Сохранение карты с пустыми полями приведёт к тому, что информация о пользователе удалится из системы. Вы действительно хотите этого?</string>
 </resources>

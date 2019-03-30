@@ -2,12 +2,14 @@ package xyz.yaroslav.zttapacs;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -39,6 +41,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
 public class TagDialogFragment extends DialogFragment {
@@ -74,6 +78,8 @@ public class TagDialogFragment extends DialogFragment {
     private String default_address = "";
 
     private String uid_value;
+
+    private boolean is_card_empty = true;
 
     //#endregion
 
@@ -143,11 +149,13 @@ public class TagDialogFragment extends DialogFragment {
                         String result = new HTTPAsyncTask().execute(default_url).get();
                         Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
                     } catch (ExecutionException e) {
-                        e.printStackTrace();
+                        Log.e("HTTP_ASYNK_TASK", "ExecutionException: " + e.getClass() + " -> " + e.getMessage());
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Log.e("HTTP_ASYNK_TASK", "InterruptedException: " + e.getClass() + " -> " + e.getMessage());
                     }
                     getDialog().dismiss();
+                } else if (!is_card_empty){
+                    warningDialog(getDialog());
                 } else {
                     Toast.makeText(getContext(), getString(R.string.toast_empty_fields), Toast.LENGTH_SHORT).show();
                 }
@@ -264,6 +272,9 @@ public class TagDialogFragment extends DialogFragment {
             if (employeeTag != null) {
                 tagEmployee.setText(employeeTag.getEmpName());
                 tagDepartment.setText(employeeTag.getEmpDepartment());
+                is_card_empty = false;
+            } else {
+                is_card_empty = true;
             }
         } catch (ExecutionException | InterruptedException e) {
             Log.e("CHECK_CARD_EXISTENCE", "Exception: " + "(" + e.getClass() + "): " + e.getMessage());
@@ -312,6 +323,40 @@ public class TagDialogFragment extends DialogFragment {
             Log.e("GET_CARD_BY_ID", "JSON Exception: " + "(" + e.getClass() + "): " + e.getMessage());
         }
         return null;
+    }
+
+    private void warningDialog(final Dialog parentDialog) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(getString(R.string.label_warning));
+        builder.setMessage(getString(R.string.message_confirmation_clear));
+        builder.setIcon(R.drawable.ic_warning);
+        builder.setPositiveButton(getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                clearCardFields();
+                dialog.dismiss();
+                parentDialog.dismiss();
+            }
+        });
+
+        builder.setNegativeButton(getString(R.string.label_cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        final AlertDialog closedialog = builder.create();
+        closedialog.show();
+    }
+
+    private void clearCardFields() {
+        try {
+            String result = new HTTPAsyncTask().execute(default_url).get();
+            Toast.makeText(getContext(), result, Toast.LENGTH_SHORT).show();
+        } catch (ExecutionException | InterruptedException e) {
+            Log.e("HTTP_ASYNK_TASK", "Exception: " + e.getClass() + " -> " + e.getMessage());
+        }
     }
 }
 

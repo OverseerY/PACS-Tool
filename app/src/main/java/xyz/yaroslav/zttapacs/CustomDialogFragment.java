@@ -44,7 +44,7 @@ public class CustomDialogFragment extends DialogFragment {
 
         systemPref = getActivity().getSharedPreferences(SYS_PREFERENCES, Context.MODE_PRIVATE);
         server_protocol = systemPref.getString(SERVER_PROTOCOL, "http");
-        server_ip = systemPref.getString(SERVER_IP, "192.168.0.220");
+        server_ip = systemPref.getString(SERVER_IP, "192.168.0.14");
         server_port = systemPref.getString(SERVER_PORT, "5002");
         server_postfix = systemPref.getString(SERVER_POSTFIX, "add");
 
