@@ -270,9 +270,13 @@ public class TagDialogFragment extends DialogFragment {
         try {
             EmployeeTag employeeTag = new CheckCardAsynkTask().execute(default_address).get();
             if (employeeTag != null) {
-                tagEmployee.setText(employeeTag.getEmpName());
-                tagDepartment.setText(employeeTag.getEmpDepartment());
-                is_card_empty = false;
+                if (!employeeTag.getEmpName().equals("") && !employeeTag.getEmpDepartment().equals("")) {
+                    tagEmployee.setText(employeeTag.getEmpName());
+                    tagDepartment.setText(employeeTag.getEmpDepartment());
+                    is_card_empty = false;
+                } else {
+                    is_card_empty = true;
+                }
             } else {
                 is_card_empty = true;
             }
